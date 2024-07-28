@@ -1,175 +1,192 @@
-#Definição das classes para AFN e AFD
+class NFA:
+    def __init__(self, estados, alfabeto, transicoes, estado_inicial, estados_aceitacao):
+        """
+        Inicializa um autômato finito não-determinístico (NFA).
 
-class Automaton:
-    def __init__(self, states, alphabet, transitions, start_state, accept_states):
-        self.states = states
-        self.alphabet = alphabet
-        self.transitions = transitions
-        self.start_state = start_state
-        self.accept_states = accept_states
+        estados: Conjunto de estados do NFA.
+        alfabeto: Conjunto de símbolos do alfabeto do NFA.
+        transicoes: Dicionário de transições onde a chave é uma tupla (estado, símbolo)
+        e o valor é um conjunto de estados.
 
-class DFA(Automaton):
-    def __init__(self, states, alphabet, transitions, start_state, accept_states):
-        super().__init__(states, alphabet, transitions, start_state, accept_states)
+        estado_inicial: Estado inicial do NFA.
+        estados_aceitacao: Conjunto de estados de aceitação do NFA.
+        """
+        self.estados = estados
+        self.alfabeto = alfabeto
+        self.transicoes = transicoes
+        self.estado_inicial = estado_inicial
+        self.estados_aceitacao = estados_aceitacao
 
-    def accepts(self, word):
-        current_state = self.start_state
-        for symbol in word:
-            if (current_state, symbol) in self.transitions:
-                current_state = self.transitions[(current_state, symbol)]
+    def aceita(self, palavra):
+        """
+        Verifica se o NFA aceita uma palavra.
+
+        palavra: Palavra a ser verificada.
+        return True se a palavra é aceita, False caso contrário.
+        """
+        estados_atuais = {self.estado_inicial}
+        for simbolo in palavra:
+            proximos_estados = set()
+            for estado in estados_atuais:
+                if (estado, simbolo) in self.transicoes:
+                    proximos_estados.update(self.transicoes[(estado, simbolo)])
+            estados_atuais = proximos_estados
+        return not estados_atuais.isdisjoint(self.estados_aceitacao)
+
+
+class DFA:
+    def __init__(self, estados, alfabeto, transicoes, estado_inicial, estados_aceitacao):
+        """
+        Inicializa um autômato finito determinístico (DFA).
+
+        estados: Conjunto de estados do DFA.
+        alfabeto: Conjunto de símbolos do alfabeto do DFA.
+        transicoes: Dicionário de transições onde a chave é uma tupla (estado, símbolo) e o valor é um estado.
+        estado_inicial: Estado inicial do DFA.
+        estados_aceitacao: Conjunto de estados de aceitação do DFA.
+        """
+        self.estados = estados
+        self.alfabeto = alfabeto
+        self.transicoes = transicoes
+        self.estado_inicial = estado_inicial
+        self.estados_aceitacao = estados_aceitacao
+
+    def aceita(self, palavra):
+        """
+        Verifica se o DFA aceita uma palavra.
+
+        palavra: Palavra a ser verificada.
+        return: True se a palavra é aceita, False caso contrário.
+        """
+        estado_atual = self.estado_inicial
+        for simbolo in palavra:
+            if (estado_atual, simbolo) in self.transicoes:
+                estado_atual = self.transicoes[(estado_atual, simbolo)]
             else:
                 return False
-        return current_state in self.accept_states
-
-class NFA(Automaton):
-    def __init__(self, states, alphabet, transitions, start_state, accept_states):
-        super().__init__(states, alphabet, transitions, start_state, accept_states)
-
-    def accepts(self, word):
-        current_states = {self.start_state}
-        for symbol in word:
-            next_states = set()
-            for state in current_states:
-                if (state, symbol) in self.transitions:
-                    next_states.update(self.transitions[(state, symbol)])
-            current_states = next_states
-        return bool(current_states.intersection(self.accept_states))
-
-#Conversão de AFN para AFD
+        return estado_atual in self.estados_aceitacao
 
 
-def convert_nfa_to_dfa(nfa):
-    dfa_states = {}
-    dfa_transitions = {}
-    dfa_start_state = frozenset([nfa.start_state])
-    dfa_accept_states = set()
+def converter_nfa_para_dfa(nfa):
+    """
+    Converte um NFA em um DFA equivalente.
 
-    queue = [dfa_start_state]
-    dfa_states[dfa_start_state] = True
+    nfa: Instância do NFA a ser convertido.
+    return: Instância do DFA equivalente.
+    """
+    estados_dfa = {frozenset([nfa.estado_inicial])}
+    estado_inicial_dfa = frozenset([nfa.estado_inicial])
+    estados_aceitacao_dfa = set()
+    transicoes_dfa = {}
+    estados_nao_marcados = [frozenset([nfa.estado_inicial])]
 
-    while queue:
-        current_dfa_state = queue.pop(0)
-        for symbol in nfa.alphabet:
-            next_dfa_state = set()
-            for state in current_dfa_state:
-                if (state, symbol) in nfa.transitions:
-                    next_dfa_state.update(nfa.transitions[(state, symbol)])
-            next_dfa_state = frozenset(next_dfa_state)
-            if next_dfa_state:
-                dfa_transitions[(current_dfa_state, symbol)] = next_dfa_state
-                if next_dfa_state not in dfa_states:
-                    dfa_states[next_dfa_state] = True
-                    queue.append(next_dfa_state)
+    while estados_nao_marcados:
+        atual = estados_nao_marcados.pop()
+        if not atual.isdisjoint(nfa.estados_aceitacao):
+            estados_aceitacao_dfa.add(atual)
+        for simbolo in nfa.alfabeto:
+            proximo_estado = set()
+            for estado in atual:
+                if (estado, simbolo) in nfa.transicoes:
+                    proximo_estado.update(nfa.transicoes[(estado, simbolo)])
+            proximo_estado = frozenset(proximo_estado)
+            if proximo_estado:
+                if proximo_estado not in estados_dfa:
+                    estados_dfa.add(proximo_estado)
+                    estados_nao_marcados.append(proximo_estado)
+                transicoes_dfa[(atual, simbolo)] = proximo_estado
 
-    for dfa_state in dfa_states:
-        if dfa_state.intersection(nfa.accept_states):
-            dfa_accept_states.add(dfa_state)
-
-    return DFA(
-        states=set(dfa_states.keys()),
-        alphabet=nfa.alphabet,
-        transitions=dfa_transitions,
-        start_state=dfa_start_state,
-        accept_states=dfa_accept_states
-    )
+    return DFA(estados_dfa, nfa.alfabeto, transicoes_dfa, estado_inicial_dfa, estados_aceitacao_dfa)
 
 
-#Simulação de Aceitação de Palavras Já foi implementada
-#a simulação de aceitação de palavras nas classes DFA e NFA.
+def minimizar_dfa(dfa):
+    """
+    Minimiza um DFA removendo estados redundantes.
 
-#Demonstração de Equivalência
+    dfa: Instância do DFA a ser minimizado.
+    return: Instância do DFA minimizado.
+    """
+    particoes = [dfa.estados_aceitacao, dfa.estados - dfa.estados_aceitacao]
+    while True:
+        novas_particoes = []
+        for particao in particoes:
+            divisao = {}
+            for estado in particao:
+                chave = tuple(frozenset(
+                    {(estado, simbolo): dfa.transicoes.get((estado, simbolo), None) for simbolo in dfa.alfabeto}))
+                if chave not in divisao:
+                    divisao[chave] = set()
+                divisao[chave].add(estado)
+            novas_particoes.extend(divisao.values())
+        if len(novas_particoes) == len(particoes):
+            break
+        particoes = novas_particoes
 
-def demonstrate_equivalence(nfa, dfa, test_words):
-    for word in test_words:
-        if nfa.accepts(word) != dfa.accepts(word):
+    mapeamento_estados = {estado: i for i, particao in enumerate(particoes) for estado in particao}
+    novos_estados = set(mapeamento_estados.values())
+    novo_estado_inicial = mapeamento_estados[dfa.estado_inicial]
+    novos_estados_aceitacao = {mapeamento_estados[estado] for estado in dfa.estados_aceitacao}
+    novas_transicoes = {}
+    for (estado, simbolo), proximo_estado in dfa.transicoes.items():
+        novas_transicoes[(mapeamento_estados[estado], simbolo)] = mapeamento_estados[proximo_estado]
+
+    return DFA(novos_estados, dfa.alfabeto, novas_transicoes, novo_estado_inicial, novos_estados_aceitacao)
+
+
+def demonstrar_equivalencia(nfa, dfa, palavras_teste):
+    """
+    Verifica a equivalência entre um NFA e um DFA usando palavras de teste.
+
+    nfa: Instância do NFA.
+    dfa: Instância do DFA.
+    palavras_teste: Lista de palavras para testar equivalência.
+    return: True se o NFA e o DFA são equivalentes, False caso contrário.
+    """
+    for palavra in palavras_teste:
+        if nfa.aceita(palavra) != dfa.aceita(palavra):
             return False
     return True
 
 
-#Minimização de AFDs
-
-
-def minimize_dfa(dfa):
-    P = [dfa.accept_states, dfa.states - dfa.accept_states]
-    W = [dfa.accept_states, dfa.states - dfa.accept_states]
-
-    while W:
-        A = W.pop()
-        for c in dfa.alphabet:
-            X = {state for state in dfa.states if (state, c) in dfa.transitions and dfa.transitions[(state, c)] in A}
-            for Y in P:
-                intersection = X.intersection(Y)
-                difference = Y.difference(X)
-                if intersection and difference:
-                    P.remove(Y)
-                    P.append(intersection)
-                    P.append(difference)
-                    if Y in W:
-                        W.remove(Y)
-                        W.append(intersection)
-                        W.append(difference)
-                    else:
-                        if len(intersection) <= len(difference):
-                            W.append(intersection)
-                        else:
-                            W.append(difference)
-
-    new_states = set(frozenset(partition) for partition in P)
-    new_start_state = next(state for state in new_states if dfa.start_state in state)
-    new_accept_states = set(state for state in new_states if state.intersection(dfa.accept_states))
-    new_transitions = {}
-
-    for state in new_states:
-        for c in dfa.alphabet:
-            if any((substate, c) in dfa.transitions for substate in state):
-                next_state = next(
-                    frozenset(partition) for partition in P
-                    if dfa.transitions[(next(iter(state)), c)] in partition
-                )
-                new_transitions[(state, c)] = next_state
-
-    return DFA(
-        states=new_states,
-        alphabet=dfa.alphabet,
-        transitions=new_transitions,
-        start_state=new_start_state,
-        accept_states=new_accept_states
-    )
-
-
-#Construção de um Front-end Simples
-
 def main():
-    states = set(input("Estados (separados por espaço): ").split())
-    alphabet = set(input("Alfabeto (separados por espaço): ").split())
-    transitions = {}
+    """
+    Função principal que lê a entrada do usuário e executa as operações principais.
+    """
+    estados = set(input("Estados (separados por espaço): ").split())
+    alfabeto = set(input("Alfabeto (separados por espaço): ").split())
+    transicoes = {}
     print("Transições (no formato 'estado símbolo estado_destino'):")
     while True:
-        transition = input()
-        if not transition:
+        transicao = input()
+        if not transicao:
             break
-        state, symbol, next_state = transition.split()
-        if (state, symbol) not in transitions:
-            transitions[(state, symbol)] = set()
-        transitions[(state, symbol)].add(next_state)
-    start_state = input("Estado inicial: ")
-    accept_states = set(input("Estados de aceitação (separados por espaço): ").split())
+        partes = transicao.split()
+        if len(partes) != 3:
+            print("Entrada inválida. Tente novamente.")
+            continue
+        estado, simbolo, estado_destino = partes
+        if (estado, simbolo) not in transicoes:
+            transicoes[(estado, simbolo)] = set()
+        transicoes[(estado, simbolo)].add(estado_destino)
 
-    nfa = NFA(states, alphabet, transitions, start_state, accept_states)
-    dfa = convert_nfa_to_dfa(nfa)
-    minimized_dfa = minimize_dfa(dfa)
+    estado_inicial = input("Estado inicial: ")
+    estados_aceitacao = set(input("Estados de aceitação (separados por espaço): ").split())
+
+    nfa = NFA(estados, alfabeto, transicoes, estado_inicial, estados_aceitacao)
+    dfa = converter_nfa_para_dfa(nfa)
+    dfa_minimizado = minimizar_dfa(dfa)
 
     while True:
-        word = input("Digite uma palavra para verificar (ou 'sair' para encerrar): ")
-        if word == 'sair':
+        palavra = input("Digite uma palavra para verificar (ou 'sair' para encerrar): ")
+        if palavra == 'sair':
             break
-        print(f"AFN aceita a palavra? {'Sim' if nfa.accepts(word) else 'Não'}")
-        print(f"AFD aceita a palavra? {'Sim' if dfa.accepts(word) else 'Não'}")
-        print(f"AFD Minimizado aceita a palavra? {'Sim' if minimized_dfa.accepts(word) else 'Não'}")
+        print(f"AFN aceita a palavra? {'Sim' if nfa.aceita(palavra) else 'Não'}")
+        print(f"AFD aceita a palavra? {'Sim' if dfa.aceita(palavra) else 'Não'}")
+        print(f"AFD Minimizado aceita a palavra? {'Sim' if dfa_minimizado.aceita(palavra) else 'Não'}")
 
-    test_words = input("Palavras de teste (separadas por espaço): ").split()
-    equivalence = demonstrate_equivalence(nfa, dfa, test_words)
-    print(f"AFN e AFD são equivalentes? {'Sim' if equivalence else 'Não'}")
+    palavras_teste = input("Palavras de teste (separadas por espaço): ").split()
+    equivalencia = demonstrar_equivalencia(nfa, dfa, palavras_teste)
+    print(f"AFN e AFD são equivalentes? {'Sim' if equivalencia else 'Não'}")
 
 
 if __name__ == "__main__":
