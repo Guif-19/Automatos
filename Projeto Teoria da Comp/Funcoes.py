@@ -1,7 +1,7 @@
 #############################
 # Funções para os autômatos #
 #############################
-import Automatos 
+import Automatos
 
 #Conversor de AFN para AFD
 def conversor_afn_para_afd(afn):
@@ -42,22 +42,34 @@ def conversor_afn_para_afd(afn):
 #Função de impressão do AFN
 def imprimir_afn(afn):
     print("\nNFA:")
-    print("Estados:", afn.estados)
-    print("Alfabeto:", afn.alfabeto)
-    print("Transições:")
+    print("Estados: ", afn.estados)
+    print("Alfabeto: ", afn.alfabeto)
+    print("Transições: ")
     for (estado, simbolo), estados_destino in afn.transicao.items():
-        for estado_destino in estados_destino:
-            print(f" {estado} --{simbolo}--> {estado_destino}")
-    print("Estado inicial:", afn.inicial)
-    print("Estados de aceitação:", afn.finais)
+        for destino in estados_destino:
+            print(f" {estado} --{simbolo}--> {destino}")
+    print("Estado inicial: ", afn.inicial)
+    print("Estados de aceitação: ", afn.finais)
 
 #Função de impressão do AFD
 def imprimir_afd(afd):
-    print("\nDFA:")
-    print("Estados:", afd.estados)
-    print("Alfabeto:", afd.alfabeto)
-    print("Transições:")
-    for (estado, simbolo), estado_destino in afd.transicao.items():
-        print(f" {estado} --{simbolo}--> {estado_destino}")
-    print("Estado inicial:", afd.inicial)
-    print("Estados de aceitação:", afd.finais)
+    print("\nDFA: ")
+    print("Estados: ", afd.estados)
+    print("Alfabeto: ", afd.alfabeto)
+    print("Transições: ")
+    for (estado, simbolo), destino in afd.transicao.items():
+        print(f" {estado} --{simbolo}--> {destino}")
+    print("Estado inicial: ", afd.inicial)
+    print("Estados de aceitação: ", afd.finais)
+
+#Função de impressão da Máquina de Turing
+def imprimir_turing(t):
+    print("\nMáquina de Turing:")
+    print("Estados: ", t.estados)
+    print("Alfabeto de Entrada: ", t.alfabeto_entrada)
+    print("Alfabeto da Fita: ", t.alfabeto_fita)
+    print("Símbolo de Marcação do Início: ", t.marca_inicio)
+    print("Símbolo de Espaços Vazios: ", t.vazio)
+    print("Transições:", t.transicao)
+    print("Estado inicial:", t.inicial)
+    print("Estados de aceitação:", t.finais)
