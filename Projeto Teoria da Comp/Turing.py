@@ -15,9 +15,9 @@ class MaquinaTuring:
         self.cabeca = 1
         self.atual = self.inicial
     
-    def executar(self, max_passos=999):
+    def executar(self):
         passos = 0
-        while self.atual not in self.finais and passos < max_passos:
+        while self.atual not in self.finais:
             leitura = self.fita[self.cabeca]
             if (self.atual, leitura) in self.transicao:
                 novo_estado, escrever, mover = self.transicao[(self.atual, leitura)]

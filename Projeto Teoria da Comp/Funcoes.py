@@ -5,7 +5,6 @@ import Automatos
 
 #Conversor de AFN para AFD
 def conversor_afn_para_afd(afn):
-    x=0
     novo_inicial = frozenset([afn.inicial])
     novos_estados = {novo_inicial}
     novas_transicoes = {}

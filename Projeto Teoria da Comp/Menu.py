@@ -8,7 +8,7 @@ import Turing
 def main():
     print("\nSimulador de Autômatos\n\n"
         "Rafael Souza Tavares de Castro-8179\n"
-        "Guilherme Francisco de Sousa Costa- 7555\n\n")
+        "Guilherme Francisco de Sousa Costa-7555\n\n")
     
 #Escolha do tipo de autômato da entrada    
     tipo = input("Selecione qual autômato deseja inserir (AFD, AFN ou TURING): ").upper()
@@ -91,10 +91,7 @@ def main():
 
         if(tipo == 'AFD'):
             afd = Automatos.AFD(estados, alfabeto, transicoes, estado_inicial, estados_finais)
-            minimizado_afd = Funcoes.minimizar_afd(afd)
             print(afd)
-            print("\nAFD minimizado")
-            Funcoes.imprimir_afd(minimizado_afd)
         if(tipo == 'AFN'):
             afn = Automatos.AFN(estados, alfabeto, transicoes, estado_inicial, estados_finais)
             convertido_afd = Funcoes.conversor_afn_para_afd(afn)
@@ -108,7 +105,7 @@ def main():
             if palavra == 'sair':
                 break
             if(tipo == 'AFD'):
-                print(f"\nO AFD aceita a palavra? {'Sim' if afd.verificar_Palavra(palavra) else 'Não'}")
+                print(f"\nO AFD aceita a palavra? {'Sim' if afd.verificar_palavra(palavra) else 'Não'}")
             if(tipo == 'AFN'):
                 print(f"\nO AFN aceita a palavra? {'Sim' if afn.verificar_palavra(palavra) else 'Não'}")
                 print(f"\nO AFD convertido aceita a palavra? {'Sim' if convertido_afd.verificar_palavra(palavra) else 'Não'}")
